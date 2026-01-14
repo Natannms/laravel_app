@@ -42,8 +42,20 @@ class ProjectResource extends Resource
                         ),
                     )
                     ->required(),
-                TextInput::make('name')->required()->maxLength(255),
-                TextInput::make('key')->required()->maxLength(255),
+                TextInput::make('name')
+                    ->required()
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if (is_string($state) && $state !== '') {
+                            $set('key', Project::previewKeyFromName($state));
+                        }
+                    }),
+                TextInput::make('key')
+                    ->label('Key (auto)')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Gerado automaticamente a partir do nome. O número pode variar se já existir.'),
             ]);
     }
 

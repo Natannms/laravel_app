@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use App\Services\ProjectSetupService;
 
 class Project extends Model
 {
@@ -24,9 +25,13 @@ class Project extends Model
 
             $workspaceId = $model->getAttribute('workspace_id');
             $name = (string) $model->getAttribute('name');
-            if ($workspaceId && $name) {
+            if ($workspaceId && $name && ! $model->getAttribute('key')) {
                 $model->setAttribute('key', self::generateUniqueKeyForWorkspace((string) $workspaceId, $name));
             }
+        });
+
+        static::created(function (self $model) {
+            app(ProjectSetupService::class)->ensureDefaultBoardAndColumns($model);
         });
     }
 
@@ -35,7 +40,7 @@ class Project extends Model
         return self::keyBaseFromName($name) . '-1';
     }
 
-    private static function generateUniqueKeyForWorkspace(string $workspaceId, string $name): string
+    public static function generateUniqueKeyForWorkspace(string $workspaceId, string $name): string
     {
         $base = self::keyBaseFromName($name);
 

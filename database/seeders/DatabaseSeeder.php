@@ -59,9 +59,13 @@ class DatabaseSeeder extends Seeder
             ['board_id' => $board->id, 'name' => 'In Progress'],
             ['board_id' => $board->id, 'name' => 'In Progress', 'position' => 2]
         );
+        $review = BoardColumn::query()->firstOrCreate(
+            ['board_id' => $board->id, 'name' => 'Review'],
+            ['board_id' => $board->id, 'name' => 'Review', 'position' => 3]
+        );
         $done = BoardColumn::query()->firstOrCreate(
             ['board_id' => $board->id, 'name' => 'Done'],
-            ['board_id' => $board->id, 'name' => 'Done', 'position' => 3, 'is_done' => true]
+            ['board_id' => $board->id, 'name' => 'Done', 'position' => 4, 'is_done' => true]
         );
 
         $sprint = Sprint::query()->firstOrCreate(

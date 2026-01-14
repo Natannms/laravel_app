@@ -3,6 +3,16 @@ set -e
 
 cd /var/www/html
 
+mkdir -p \
+  storage/app/public \
+  storage/app/private \
+  storage/framework/cache/data \
+  storage/framework/sessions \
+  storage/framework/testing \
+  storage/framework/views \
+  storage/logs \
+  bootstrap/cache
+
 if [ ! -f composer.json ]; then
   composer create-project laravel/laravel /tmp/app "^12.0"
   cp -R /tmp/app/. /var/www/html/

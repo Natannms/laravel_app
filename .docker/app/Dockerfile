@@ -33,6 +33,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
+COPY .docker/app/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
 COPY .docker/app/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

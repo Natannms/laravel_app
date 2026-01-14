@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SprintStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,9 @@ class Sprint extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     protected $fillable = ['project_id', 'name', 'goal', 'start_date', 'end_date', 'status', 'position'];
+    protected $casts = [
+        'status' => SprintStatus::class,
+    ];
 
     protected static function booted(): void
     {
@@ -25,7 +29,7 @@ class Sprint extends Model
 
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class)->withTrashed();
     }
 
     public function issues(): HasMany

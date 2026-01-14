@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\IssueType;
+use App\Enums\SprintStatus;
+use App\Enums\WorkspaceRole;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceUser;
@@ -35,7 +38,7 @@ class DatabaseSeeder extends Seeder
             'workspace_id' => $workspace->id,
             'user_id' => $user->id,
         ], [
-            'role' => 'OWNER',
+            'role' => WorkspaceRole::Owner->value,
         ]);
 
         $project = Project::query()->firstOrCreate(
@@ -67,7 +70,7 @@ class DatabaseSeeder extends Seeder
                 'project_id' => $project->id,
                 'name' => 'Sprint 1',
                 'goal' => 'Primeira entrega',
-                'status' => 'PLANNED',
+                'status' => SprintStatus::Planned->value,
                 'position' => 1,
             ]
         );
@@ -78,7 +81,7 @@ class DatabaseSeeder extends Seeder
                 'project_id' => $project->id,
                 'board_column_id' => $todo->id,
                 'sprint_id' => $sprint->id,
-                'type' => 'EPIC',
+                'type' => IssueType::Epic->value,
                 'title' => 'Plataforma inicial',
                 'description' => 'Infra e base do projeto',
                 'position_in_column' => 1,
@@ -92,7 +95,7 @@ class DatabaseSeeder extends Seeder
                 'board_column_id' => $doing->id,
                 'sprint_id' => $sprint->id,
                 'epic_id' => $epic->id,
-                'type' => 'STORY',
+                'type' => IssueType::Story->value,
                 'title' => 'Autenticação Sanctum',
                 'description' => 'Cadastro, login, logout e /me',
                 'assignee_id' => $user->id,
@@ -108,7 +111,7 @@ class DatabaseSeeder extends Seeder
                 'board_column_id' => $done->id,
                 'sprint_id' => $sprint->id,
                 'parent_id' => $story->id,
-                'type' => 'TASK',
+                'type' => IssueType::Task->value,
                 'title' => 'Modelagem de banco',
                 'description' => 'Tabelas principais e relacionamentos',
                 'position_in_column' => 1,

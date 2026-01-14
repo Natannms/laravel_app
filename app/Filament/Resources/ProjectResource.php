@@ -16,6 +16,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Support\Facades\Auth;
+use App\Enums\WorkspaceRole;
 
 class ProjectResource extends Resource
 {
@@ -28,7 +30,17 @@ class ProjectResource extends Resource
         return $form
             ->schema([
                 Select::make('workspace_id')
-                    ->relationship('workspace', 'name')
+                    ->relationship(
+                        name: 'workspace',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn (Builder $query) => $query->whereHas(
+                            'workspaceUsers',
+                            fn (Builder $q) => $q->where('user_id', Auth::id())->whereIn('role', [
+                                WorkspaceRole::Owner->value,
+                                WorkspaceRole::Admin->value,
+                            ]),
+                        ),
+                    )
                     ->required(),
                 TextInput::make('name')->required()->maxLength(255),
                 TextInput::make('key')->required()->maxLength(255),
@@ -49,12 +61,31 @@ class ProjectResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $userId = Auth::id();
+        if (! $userId) {
+            return parent::getEloquentQuery()->whereRaw('1=0');
+        }
+
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ])
+            ->whereHas('workspace.workspaceUsers', fn (Builder $query) => $query->where('user_id', $userId));
     }
 
     public static function getRelations(): array

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Support\Facades\Auth;
 
 class WorkspaceResource extends Resource
 {
@@ -27,7 +28,7 @@ class WorkspaceResource extends Resource
         return $form
             ->schema([
                 TextInput::make('name')->required()->maxLength(255),
-                TextInput::make('slug')->required()->maxLength(255),
+                TextInput::make('slug')->required()->maxLength(255)->unique(ignoreRecord: true),
             ]);
     }
 
@@ -44,18 +45,37 @@ class WorkspaceResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\ForceDeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $userId = Auth::id();
+        if (! $userId) {
+            return parent::getEloquentQuery()->whereRaw('1=0');
+        }
+
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ])
+            ->whereHas('workspaceUsers', fn (Builder $query) => $query->where('user_id', $userId));
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\WorkspaceUsersRelationManager::class,
         ];
     }
 

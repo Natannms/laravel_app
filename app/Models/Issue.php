@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\IssueType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,6 +30,11 @@ class Issue extends Model
         'blocked_by_issue_id',
         'position_in_column',
     ];
+    protected $casts = [
+        'type' => IssueType::class,
+        'blocked' => 'boolean',
+        'estimate_hours' => 'decimal:2',
+    ];
 
     protected static function booted(): void
     {
@@ -41,7 +47,7 @@ class Issue extends Model
 
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class)->withTrashed();
     }
 
     public function column(): BelongsTo

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\WorkspaceRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,6 +14,9 @@ class WorkspaceUser extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     protected $fillable = ['workspace_id', 'user_id', 'role'];
+    protected $casts = [
+        'role' => WorkspaceRole::class,
+    ];
 
     protected static function booted(): void
     {

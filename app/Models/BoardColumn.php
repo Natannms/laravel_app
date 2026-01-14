@@ -25,7 +25,7 @@ class BoardColumn extends Model
 
     public function board(): BelongsTo
     {
-        return $this->belongsTo(Board::class);
+        return $this->belongsTo(Board::class)->withTrashed();
     }
 
     public function issues(): HasMany

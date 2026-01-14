@@ -4,17 +4,13 @@ namespace Database\Seeders;
 
 use App\Enums\IssueType;
 use App\Enums\SprintStatus;
-use App\Enums\WorkspaceRole;
-use App\Models\User;
 use App\Models\Workspace;
-use App\Models\WorkspaceUser;
 use App\Models\Project;
 use App\Models\Board;
 use App\Models\BoardColumn;
 use App\Models\Sprint;
 use App\Models\Issue;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -24,22 +20,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::query()->firstOrCreate(
-            ['email' => 'admin@example.com'],
-            ['name' => 'Admin', 'password' => 'secret123']
-        );
-
         $workspace = Workspace::query()->firstOrCreate(
             ['slug' => 'default'],
             ['name' => 'Default Workspace', 'slug' => 'default']
         );
 
-        WorkspaceUser::query()->firstOrCreate([
-            'workspace_id' => $workspace->id,
-            'user_id' => $user->id,
-        ], [
-            'role' => WorkspaceRole::Owner->value,
-        ]);
+        $this->call(DevOwnerUserSeeder::class);
 
         $project = Project::query()->firstOrCreate(
             ['key' => 'PRJ'],
@@ -102,8 +88,6 @@ class DatabaseSeeder extends Seeder
                 'type' => IssueType::Story->value,
                 'title' => 'Autenticação Sanctum',
                 'description' => 'Cadastro, login, logout e /me',
-                'assignee_id' => $user->id,
-                'reporter_id' => $user->id,
                 'position_in_column' => 1,
             ]
         );

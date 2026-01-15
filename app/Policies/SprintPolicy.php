@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
-use App\Enums\WorkspaceRole;
 use App\Models\Sprint;
 use App\Models\User;
-use App\Support\WorkspacePermissions;
+use App\Services\PermissionResolver;
 
 class SprintPolicy
 {
@@ -16,33 +15,22 @@ class SprintPolicy
 
     public function view(User $user, Sprint $sprint): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $sprint->project->workspace_id, WorkspaceRole::cases());
+        return app(PermissionResolver::class)->has($user, 'sprints.view_any', (string) $sprint->project->workspace_id, (string) $sprint->project_id);
     }
 
     public function create(User $user): bool
     {
-        return WorkspacePermissions::hasRoleInAnyWorkspace($user, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-            WorkspaceRole::Manager,
-        ]);
+        return app(PermissionResolver::class)->hasInAnyWorkspace($user, 'sprints.create');
     }
 
     public function update(User $user, Sprint $sprint): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $sprint->project->workspace_id, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-            WorkspaceRole::Manager,
-        ]);
+        return app(PermissionResolver::class)->has($user, 'sprints.update', (string) $sprint->project->workspace_id, (string) $sprint->project_id);
     }
 
     public function delete(User $user, Sprint $sprint): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $sprint->project->workspace_id, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-        ]);
+        return app(PermissionResolver::class)->has($user, 'sprints.delete', (string) $sprint->project->workspace_id, (string) $sprint->project_id);
     }
 
     public function restore(User $user, Sprint $sprint): bool
@@ -55,4 +43,3 @@ class SprintPolicy
         return $this->delete($user, $sprint);
     }
 }
-

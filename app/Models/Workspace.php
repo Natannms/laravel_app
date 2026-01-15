@@ -31,4 +31,9 @@ class Workspace extends Model
     {
         return $this->hasMany(WorkspaceUser::class);
     }
+
+    public function groups(): HasMany
+    {
+        return $this->hasMany(WorkspaceGroup::class);
+    }
 }

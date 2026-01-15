@@ -16,6 +16,9 @@ RUN apk add --no-cache \
     nodejs \
     npm
 
+RUN if ! grep -q '^www-data:' /etc/group; then addgroup -g 82 -S www-data; fi \
+    && if ! grep -q '^www-data:' /etc/passwd; then adduser -u 82 -D -S -G www-data www-data; fi
+
 RUN docker-php-ext-configure gd \
     --with-jpeg=/usr/include/ \
     --with-webp=/usr/include/ \

@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
-use App\Enums\WorkspaceRole;
 use App\Models\Project;
 use App\Models\User;
-use App\Support\WorkspacePermissions;
+use App\Services\PermissionResolver;
 
 class ProjectPolicy
 {
@@ -16,31 +15,22 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $project->workspace_id, WorkspaceRole::cases());
+        return app(PermissionResolver::class)->has($user, 'projects.view', (string) $project->workspace_id, (string) $project->id);
     }
 
     public function create(User $user): bool
     {
-        return WorkspacePermissions::hasRoleInAnyWorkspace($user, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-        ]);
+        return app(PermissionResolver::class)->hasInAnyWorkspace($user, 'projects.create');
     }
 
     public function update(User $user, Project $project): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $project->workspace_id, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-        ]);
+        return app(PermissionResolver::class)->has($user, 'projects.update', (string) $project->workspace_id, (string) $project->id);
     }
 
     public function delete(User $user, Project $project): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $project->workspace_id, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-        ]);
+        return app(PermissionResolver::class)->has($user, 'projects.delete', (string) $project->workspace_id, (string) $project->id);
     }
 
     public function restore(User $user, Project $project): bool
@@ -53,4 +43,3 @@ class ProjectPolicy
         return $this->delete($user, $project);
     }
 }
-

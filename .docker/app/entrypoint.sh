@@ -37,8 +37,16 @@ fi
 
 php artisan key:generate || true
 
-chown -R www-data:www-data storage bootstrap/cache || true
-chmod -R 775 storage bootstrap/cache || true
+if id www-data >/dev/null 2>&1; then
+  chown -R www-data:www-data storage bootstrap/cache
+else
+  chown -R 82:82 storage bootstrap/cache || true
+fi
+chmod -R u+rwX,g+rwX storage bootstrap/cache || true
+
+if [ "${APP_ENV:-}" = "local" ] || [ "${APP_DEBUG:-}" = "true" ]; then
+  chmod -R 0777 storage bootstrap/cache || true
+fi
 
 php artisan storage:link || true
 

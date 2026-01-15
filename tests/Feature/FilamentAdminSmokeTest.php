@@ -6,6 +6,7 @@ use App\Enums\WorkspaceRole;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceUser;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,6 +23,8 @@ class FilamentAdminSmokeTest extends TestCase
 
     public function test_admin_dashboard_and_resources_load_for_authenticated_user(): void
     {
+        $this->seed(PermissionsSeeder::class);
+
         $user = User::factory()->create();
         $workspace = Workspace::query()->create([
             'name' => 'Workspace',
@@ -43,6 +46,8 @@ class FilamentAdminSmokeTest extends TestCase
 
     public function test_project_create_page_is_forbidden_for_viewer_and_allowed_for_owner(): void
     {
+        $this->seed(PermissionsSeeder::class);
+
         $workspace = Workspace::query()->create([
             'name' => 'Workspace',
             'slug' => 'workspace',
@@ -69,4 +74,3 @@ class FilamentAdminSmokeTest extends TestCase
         $this->get('/admin/projects/create')->assertOk();
     }
 }
-

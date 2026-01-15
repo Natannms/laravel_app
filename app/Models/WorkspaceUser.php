@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\WorkspaceRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkspaceUser extends Model
@@ -35,5 +36,10 @@ class WorkspaceUser extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class);
+    }
+
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(WorkspaceGroup::class, 'workspace_group_members', 'workspace_user_id', 'workspace_group_id');
     }
 }

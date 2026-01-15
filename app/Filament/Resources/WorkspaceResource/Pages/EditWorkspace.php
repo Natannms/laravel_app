@@ -13,6 +13,9 @@ class EditWorkspace extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('permissions')
+                ->label('Permissões')
+                ->url(fn () => static::$resource::getUrl('permissions', ['record' => $this->record->getKey()])),
             Actions\DeleteAction::make(),
         ];
     }

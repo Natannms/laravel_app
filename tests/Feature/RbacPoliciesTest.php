@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceUser;
+use Database\Seeders\PermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;
@@ -17,6 +18,8 @@ class RbacPoliciesTest extends TestCase
 
     public function test_project_permissions_follow_workspace_roles(): void
     {
+        $this->seed(PermissionsSeeder::class);
+
         $workspace = Workspace::query()->create([
             'name' => 'Workspace',
             'slug' => 'workspace',
@@ -61,4 +64,3 @@ class RbacPoliciesTest extends TestCase
         $this->assertFalse(Gate::forUser($viewer)->allows('update', $project));
     }
 }
-

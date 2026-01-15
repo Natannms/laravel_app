@@ -68,6 +68,7 @@ class ProjectResource extends Resource
                 TextColumn::make('key')->sortable()->searchable(),
                 TextColumn::make('created_at')->dateTime()->sortable(),
             ])
+            ->recordUrl(fn (Project $record) => static::getUrl('kanban', ['record' => $record]))
             ->filters([
                 TrashedFilter::make(),
             ])
@@ -113,6 +114,8 @@ class ProjectResource extends Resource
             'index' => Pages\ListProjects::route('/'),
             'create' => Pages\CreateProject::route('/create'),
             'edit' => Pages\EditProject::route('/{record}/edit'),
+            'kanban' => Pages\ProjectKanban::route('/{record}/kanban'),
+            'issues' => Pages\ProjectIssues::route('/{record}/issues'),
         ];
     }
 }

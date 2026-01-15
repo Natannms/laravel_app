@@ -5,8 +5,12 @@ namespace App\Filament\Resources\WorkspaceResource\RelationManagers;
 use App\Enums\WorkspaceRole;
 use App\Models\User;
 use App\Models\WorkspaceUser;
+use App\Services\PermissionResolver;
+use App\Services\WorkspaceInvitationService;
+use Filament\Notifications\Notification;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
 use Filament\Tables;
@@ -22,20 +26,20 @@ class WorkspaceUsersRelationManager extends RelationManager
 
     public function canCreate(): bool
     {
-        return $this->canManageMembers();
+        return $this->canInviteMembers();
     }
 
     public function canEdit($record): bool
     {
-        return $this->canManageMembers();
+        return $this->canUpdateMemberRole();
     }
 
     public function canDelete($record): bool
     {
-        return $this->canManageMembers();
+        return $this->canRemoveMembers();
     }
 
-    protected function canManageMembers(): bool
+    protected function canInviteMembers(): bool
     {
         $userId = Auth::id();
         if (! $userId) {
@@ -43,18 +47,29 @@ class WorkspaceUsersRelationManager extends RelationManager
         }
 
         $workspaceId = $this->getOwnerRecord()->id;
-        $membership = WorkspaceUser::query()
-            ->where('workspace_id', $workspaceId)
-            ->where('user_id', $userId)
-            ->first();
+        return app(PermissionResolver::class)->has(Auth::user(), 'workspace_members.invite', (string) $workspaceId, null);
+    }
 
-        if (! $membership) {
+    protected function canUpdateMemberRole(): bool
+    {
+        $userId = Auth::id();
+        if (! $userId) {
             return false;
         }
 
-        $role = $membership->role instanceof WorkspaceRole ? $membership->role->value : (string) $membership->role;
+        $workspaceId = $this->getOwnerRecord()->id;
+        return app(PermissionResolver::class)->has(Auth::user(), 'workspace_members.update_role', (string) $workspaceId, null);
+    }
 
-        return in_array($role, [WorkspaceRole::Owner->value, WorkspaceRole::Admin->value], true);
+    protected function canRemoveMembers(): bool
+    {
+        $userId = Auth::id();
+        if (! $userId) {
+            return false;
+        }
+
+        $workspaceId = $this->getOwnerRecord()->id;
+        return app(PermissionResolver::class)->has(Auth::user(), 'workspace_members.remove', (string) $workspaceId, null);
     }
 
     public function form(Form $form): Form
@@ -102,19 +117,53 @@ class WorkspaceUsersRelationManager extends RelationManager
                 TrashedFilter::make(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()->visible(fn () => $this->canManageMembers()),
+                Tables\Actions\Action::make('invite')
+                    ->label('Convidar')
+                    ->visible(fn () => $this->canInviteMembers())
+                    ->form([
+                        TextInput::make('invite_url')
+                            ->label('Link do convite')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->extraInputAttributes([
+                                'x-init' => 'try { navigator.clipboard.writeText(\\$el.value) } catch (e) {}',
+                            ]),
+                    ])
+                    ->mountUsing(function (\Filament\Forms\Form $form) {
+                        $workspaceId = (string) $this->getOwnerRecord()->id;
+                        $service = app(WorkspaceInvitationService::class);
+
+                        [, $token] = $service->createInvitation(
+                            workspaceId: $workspaceId,
+                            createdByUserId: Auth::id() ? (string) Auth::id() : null,
+                        );
+
+                        $url = url('/invite/' . $token);
+
+                        Notification::make()
+                            ->title('Link copiado')
+                            ->body($url)
+                            ->success()
+                            ->send();
+
+                        $form->fill([
+                            'invite_url' => $url,
+                        ]);
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn ($action) => $action->label('Fechar')),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->visible(fn () => $this->canManageMembers()),
-                Tables\Actions\DeleteAction::make()->visible(fn () => $this->canManageMembers()),
-                Tables\Actions\RestoreAction::make()->visible(fn () => $this->canManageMembers()),
-                Tables\Actions\ForceDeleteAction::make()->visible(fn () => $this->canManageMembers()),
+                Tables\Actions\EditAction::make()->visible(fn () => $this->canUpdateMemberRole()),
+                Tables\Actions\DeleteAction::make()->visible(fn () => $this->canRemoveMembers()),
+                Tables\Actions\RestoreAction::make()->visible(fn () => $this->canRemoveMembers()),
+                Tables\Actions\ForceDeleteAction::make()->visible(fn () => $this->canRemoveMembers()),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->visible(fn () => $this->canManageMembers()),
-                    Tables\Actions\RestoreBulkAction::make()->visible(fn () => $this->canManageMembers()),
-                    Tables\Actions\ForceDeleteBulkAction::make()->visible(fn () => $this->canManageMembers()),
+                    Tables\Actions\DeleteBulkAction::make()->visible(fn () => $this->canRemoveMembers()),
+                    Tables\Actions\RestoreBulkAction::make()->visible(fn () => $this->canRemoveMembers()),
+                    Tables\Actions\ForceDeleteBulkAction::make()->visible(fn () => $this->canRemoveMembers()),
                 ]),
             ]);
     }

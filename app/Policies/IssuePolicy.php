@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
-use App\Enums\WorkspaceRole;
 use App\Models\Issue;
 use App\Models\User;
-use App\Support\WorkspacePermissions;
+use App\Services\PermissionResolver;
 
 class IssuePolicy
 {
@@ -16,35 +15,22 @@ class IssuePolicy
 
     public function view(User $user, Issue $issue): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $issue->project->workspace_id, WorkspaceRole::cases());
+        return app(PermissionResolver::class)->has($user, 'issues.view', (string) $issue->project->workspace_id, (string) $issue->project_id);
     }
 
     public function create(User $user): bool
     {
-        return WorkspacePermissions::hasRoleInAnyWorkspace($user, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-            WorkspaceRole::Manager,
-            WorkspaceRole::Dev,
-        ]);
+        return app(PermissionResolver::class)->hasInAnyWorkspace($user, 'issues.create');
     }
 
     public function update(User $user, Issue $issue): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $issue->project->workspace_id, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-            WorkspaceRole::Manager,
-            WorkspaceRole::Dev,
-        ]);
+        return app(PermissionResolver::class)->has($user, 'issues.update', (string) $issue->project->workspace_id, (string) $issue->project_id);
     }
 
     public function delete(User $user, Issue $issue): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $issue->project->workspace_id, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-        ]);
+        return app(PermissionResolver::class)->has($user, 'issues.delete', (string) $issue->project->workspace_id, (string) $issue->project_id);
     }
 
     public function restore(User $user, Issue $issue): bool
@@ -57,4 +43,3 @@ class IssuePolicy
         return $this->delete($user, $issue);
     }
 }
-

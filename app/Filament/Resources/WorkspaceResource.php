@@ -76,6 +76,7 @@ class WorkspaceResource extends Resource
     {
         return [
             RelationManagers\WorkspaceUsersRelationManager::class,
+            RelationManagers\WorkspaceGroupsRelationManager::class,
         ];
     }
 
@@ -85,6 +86,7 @@ class WorkspaceResource extends Resource
             'index' => Pages\ListWorkspaces::route('/'),
             'create' => Pages\CreateWorkspace::route('/create'),
             'edit' => Pages\EditWorkspace::route('/{record}/edit'),
+            'permissions' => Pages\WorkspacePermissions::route('/{record}/permissions'),
         ];
     }
 }

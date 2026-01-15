@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
-use App\Enums\WorkspaceRole;
 use App\Models\Board;
 use App\Models\User;
-use App\Support\WorkspacePermissions;
+use App\Services\PermissionResolver;
 
 class BoardPolicy
 {
@@ -16,25 +15,17 @@ class BoardPolicy
 
     public function view(User $user, Board $board): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $board->project->workspace_id, WorkspaceRole::cases());
+        return app(PermissionResolver::class)->has($user, 'boards.view', (string) $board->project->workspace_id, (string) $board->project_id);
     }
 
     public function create(User $user): bool
     {
-        return WorkspacePermissions::hasRoleInAnyWorkspace($user, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-            WorkspaceRole::Manager,
-        ]);
+        return app(PermissionResolver::class)->hasInAnyWorkspace($user, 'boards.update');
     }
 
     public function update(User $user, Board $board): bool
     {
-        return WorkspacePermissions::hasAnyRole($user, $board->project->workspace_id, [
-            WorkspaceRole::Owner,
-            WorkspaceRole::Admin,
-            WorkspaceRole::Manager,
-        ]);
+        return app(PermissionResolver::class)->has($user, 'boards.update', (string) $board->project->workspace_id, (string) $board->project_id);
     }
 
     public function delete(User $user, Board $board): bool
@@ -52,4 +43,3 @@ class BoardPolicy
         return $this->update($user, $board);
     }
 }
-
